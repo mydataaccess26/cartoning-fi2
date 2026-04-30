@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Auto Cartoning FI-2 — Laporan Shift</title>
+<style>
+:root {
+  --navy:#1a2744; --blue:#2563eb; --blue-light:#dbeafe;
+  --red:#dc2626; --red-light:#fee2e2;
+  --green:#16a34a; --green-light:#dcfce7;
+  --amber:#d97706; --amber-light:#fef3c7;
+  --gray0:#f8fafc; --gray1:#f1f5f9; --gray2:#e2e8f0;
+  --gray3:#cbd5e1; --gray4:#94a3b8; --gray5:#64748b;
+  --gray7:#334155; --gray9:#0f172a;
+  --white:#fff; --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:'Segoe UI',system-ui,sans-serif;background:var(--gray0);color:var(--gray9);font-size:15px}
+a{color:inherit;text-decoration:none}
+
+/* ── Layout ── */
+#app{min-height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;background:var(--white)}
+.topbar{background:var(--navy);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.topbar-back{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;border:none;color:#fff}
+.topbar-title{font-size:16px;font-weight:600;flex:1}
+.topbar-sub{font-size:11px;opacity:.7}
+.content{flex:1;padding:16px;padding-bottom:80px}
+
+/* ── Bottom Nav ── */
+.botnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--white);border-top:1px solid var(--gray2);display:flex;z-index:100}
+.botnav-btn{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border:none;background:none;color:var(--gray4);font-size:11px;transition:color .15s}
+.botnav-btn.active{color:var(--blue)}
+.botnav-btn svg{width:22px;height:22px}
+
+/* ── Cards ── */
+.card{background:var(--white);border:1px solid var(--gray2);border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:600;color:var(--gray5);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.card-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--gray1)}
+.card-row:last-child{border-bottom:none}
+.card-label{font-size:13px;color:var(--gray5)}
+.card-val{font-size:13px;font-weight:500;text-align:right;max-width:60%}
+
+/* ── Forms ── */
+.form-group{margin-bottom:14px}
+.form-label{font-size:13px;font-weight:500;color:var(--gray7);margin-bottom:5px;display:block}
+.form-label .req{color:var(--red)}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border:1.5px solid var(--gray2);border-radius:8px;font-size:15px;background:var(--white);color:var(--gray9);outline:none;transition:border-color .15s;font-family:inherit}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--blue)}
+.form-textarea{resize:none;min-height:80px}
+.form-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-hint{font-size:11px;color:var(--gray4);margin-top:3px}
+
+/* ── Buttons ── */
+.btn{width:100%;padding:13px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-outline{background:var(--white);color:var(--blue);border:1.5px solid var(--blue)}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto;border-radius:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:500}
+.badge-blue{background:var(--blue-light);color:#1d4ed8}
+.badge-green{background:var(--green-light);color:#15803d}
+.badge-red{background:var(--red-light);color:#b91c1c}
+.badge-amber{background:var(--amber-light);color:#b45309}
+.badge-gray{background:var(--gray1);color:var(--gray5)}
+
+/* ── Check Visual Grid ── */
+.check-section{margin-bottom:14px}
+.check-section-title{font-size:12px;font-weight:700;color:var(--navy);background:var(--gray1);padding:7px 10px;border-radius:6px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.check-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--gray2);border-radius:8px;margin-bottom:5px;background:var(--white)}
+.check-item-name{flex:1;font-size:13px;color:var(--gray7)}
+.check-item-std{font-size:11px;color:var(--gray4);margin-top:2px}
+.check-radios{display:flex;gap:4px}
+.check-radio{width:32px;height:32px;border-radius:6px;border:1.5px solid var(--gray2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:700;transition:all .15s}
+.check-radio.sel-a{border-color:var(--green);background:var(--green-light);color:var(--green)}
+.check-radio.sel-x{border-color:var(--red);background:var(--red-light);color:var(--red)}
+.check-radio.sel-dash{border-color:var(--gray3);background:var(--gray1);color:var(--gray5)}
+.keterangan-field{display:none;margin-top:6px;padding:0 2px}
+.keterangan-field.show{display:block}
+
+/* ── Trouble list ── */
+.trouble-card{border:1px solid var(--gray2);border-radius:8px;padding:11px;margin-bottom:8px;background:var(--white)}
+.trouble-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.trouble-desc{font-size:14px;font-weight:500;flex:1;padding-right:8px}
+.trouble-dur{font-size:12px;font-weight:600;color:var(--red);background:var(--red-light);padding:3px 8px;border-radius:99px;white-space:nowrap}
+.trouble-meta{font-size:12px;color:var(--gray5)}
+
+/* ── Report view ── */
+.shift-header{background:var(--navy);color:#fff;border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.shift-header h3{font-size:15px;font-weight:700}
+.shift-header .sh-meta{font-size:12px;opacity:.75;margin-top:3px}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.kpi{background:var(--gray0);border:1px solid var(--gray2);border-radius:8px;padding:10px 12px}
+.kpi-label{font-size:11px;color:var(--gray5);margin-bottom:2px}
+.kpi-val{font-size:20px;font-weight:700;color:var(--navy)}
+.kpi-val.warn{color:var(--amber)}
+.kpi-val.danger{color:var(--red)}
+.rekap-table{width:100%;font-size:13px;border-collapse:collapse;margin-top:4px}
+.rekap-table td{padding:5px 0;border-bottom:1px solid var(--gray1)}
+.rekap-table td:last-child{text-align:right;font-weight:500}
+.rekap-table tr:last-child td{border-bottom:none;font-weight:700;color:var(--red)}
+.section-divider{font-size:12px;font-weight:700;color:var(--gray5);text-transform:uppercase;letter-spacing:.5px;padding:10px 0 5px}
+
+/* ── States ── */
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray4)}
+.empty-state svg{width:48px;height:48px;margin-bottom:12px;opacity:.4}
+.empty-state p{font-size:14px}
+.spinner{border:3px solid var(--gray2);border-top-color:var(--blue);border-radius:50%;width:28px;height:28px;animation:spin .7s linear infinite;margin:20px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--gray9);color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:340px;text-align:center}
+.toast.show{opacity:1}
+.toast.ok{background:var(--green)}
+.toast.err{background:var(--red)}
+
+/* ── Step wizard ── */
+.wizard-steps{display:flex;gap:4px;margin-bottom:18px}
+.wstep{flex:1;height:4px;border-radius:99px;background:var(--gray2);transition:background .2s}
+.wstep.done{background:var(--green)}
+.wstep.active{background:var(--blue)}
+.wstep-label{text-align:center;font-size:11px;color:var(--gray4);margin-top:4px}
+
+/* ── Utility ── */
+.text-sm{font-size:13px} .text-xs{font-size:12px} .text-red{color:var(--red)}
+.text-green{color:var(--green)} .text-blue{color:var(--blue)} .text-muted{color:var(--gray5)}
+.mt-2{margin-top:8px} .mb-2{margin-bottom:8px} .flex{display:flex} .gap-2{gap:8px}
+.align-center{align-items:center} .justify-between{justify-content:space-between}
+.hidden{display:none!important} .w-full{width:100%}
+hr.divider{border:none;border-top:1px solid var(--gray2);margin:14px 0}
+
+/* ── Laporan list item ── */
+.lap-item{border:1px solid var(--gray2);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;background:var(--white);transition:border-color .15s}
+.lap-item:active{border-color:var(--blue);background:var(--blue-light)}
+.lap-item-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.lap-item-shift{font-size:14px;font-weight:600}
+.lap-item-meta{font-size:12px;color:var(--gray5)}
+.lap-item-bottom{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Top Bar -->
+  <div class="topbar" id="topbar">
+    <div class="topbar-title">🏭 Auto Cartoning FI-2</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content" id="content">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="botnav">
+    <button class="botnav-btn active" onclick="nav('home')" id="nav-home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Beranda
+    </button>
+    <button class="botnav-btn" onclick="nav('input')" id="nav-input">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Input
+    </button>
+    <button class="botnav-btn" onclick="nav('report')" id="nav-report">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Laporan
+    </button>
+    <button class="botnav-btn" onclick="nav('history')" id="nav-history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Riwayat
+    </button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — WAJIB DIISI
+// ══════════════════════════════════════════════
+const SCRIPT_URL = 'GANTI_DENGAN_URL_DEPLOYMENT_APPS_SCRIPT';
+// Cara dapat URL: setelah deploy di Apps Script,
+// salin "Web app URL" dan paste di sini.
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let masterItems = [];
+let currentPage = 'home';
+let wizardStep  = 1;
+let wizardData  = {};
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadMasterItems();
+  nav('home');
+});
+
+async function loadMasterItems() {
+  try {
+    const r = await api('getMasterItems');
+    if (r.ok) masterItems = r.data;
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════
+async function api(action, params={}) {
+  const url = SCRIPT_URL + '?action=' + action + '&' +
+    Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+  const r = await fetch(url);
+  return await r.json();
+}
+
+async function apiPost(action, data) {
+  const r = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action, data })
+  });
+  return await r.json();
+}
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function nav(page) {
+  currentPage = page;
+  document.querySelectorAll('.botnav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('nav-' + page);
+  if (btn) btn.classList.add('active');
+
+  const topbar = document.getElementById('topbar');
+  topbar.innerHTML = '<div class="topbar-title">🏭 Auto Cartoning FI-2</div>';
+
+  if (page === 'home')    renderHome();
+  if (page === 'input')   renderInputWizard(1);
+  if (page === 'report')  renderReport();
+  if (page === 'history') renderHistory();
+}
+
+function setTopbar(title, showBack, backFn) {
+  const topbar = document.getElementById('topbar');
+  topbar.innerHTML = (showBack
+    ? `<button class="topbar-back" onclick="${backFn}">←</button>` : '') +
+    `<div class="topbar-title">${title}</div>`;
+}
+
+function showContent(html) {
+  document.getElementById('content').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+// HOME
+// ══════════════════════════════════════════════
+function renderHome() {
+  const today = todayStr();
+  showContent(`
+    <div class="card" style="background:var(--navy);border:none;color:#fff;padding:18px">
+      <div style="font-size:12px;opacity:.7;margin-bottom:4px">Hari ini</div>
+      <div style="font-size:22px;font-weight:700">${formatDateDisplay(today)}</div>
+      <div style="font-size:13px;opacity:.7;margin-top:3px">Mesin: Auto Cartoning FI-2</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Aksi Cepat</div>
+      <button class="btn btn-primary mb-2" onclick="nav('input')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Input Laporan Shift Baru
+      </button>
+      <button class="btn btn-outline" onclick="nav('report')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Lihat Laporan Shift Hari Ini
+      </button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Kode Kondisi Check</div>
+      <div class="card-row"><span class="badge badge-green">a</span><span class="card-val">Normal / Sesuai Standar</span></div>
+      <div class="card-row"><span class="badge badge-red">x</span><span class="card-val">Abnormal / Perlu Tindakan</span></div>
+      <div class="card-row"><span class="badge badge-gray">-</span><span class="card-val">Stop / Tidak Berlaku (NA)</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Panduan Penggunaan</div>
+      <div class="card-row"><span class="card-label">1. Input</span><span class="card-val text-sm">Isi laporan shift (4 langkah)</span></div>
+      <div class="card-row"><span class="card-label">2. Laporan</span><span class="card-val text-sm">Lihat ringkasan hari ini</span></div>
+      <div class="card-row"><span class="card-label">3. Riwayat</span><span class="card-val text-sm">Cari laporan shift lama</span></div>
+      <div class="card-row"><span class="card-label">Shift berikutnya</span><span class="card-val text-sm">Buka tab Laporan untuk lihat handover</span></div>
+    </div>
+  `);
+}
+
+// ══════════════════════════════════════════════
+// INPUT WIZARD (4 langkah)
+// ══════════════════════════════════════════════
+function renderInputWizard(step) {
+  wizardStep = step;
+  setTopbar('Input Laporan Shift', true, 'nav("home")');
+
+  const steps = ['Info Shift','Check Safety','Check Visual','Trouble & Rekap'];
+  const stepsHtml = steps.map((s,i)=>`
+    <div style="flex:1;text-align:center">
+      <div class="wstep ${i+1<step?'done':i+1===step?'active':''}" style="margin:0 auto 3px"></div>
+      <div style="font-size:10px;color:${i+1===step?'var(--blue)':'var(--gray4)'}">${s}</div>
+    </div>`).join('');
+
+  let body = '';
+  if (step === 1) body = renderStep1();
+  if (step === 2) body = renderStep2();
+  if (step === 3) body = renderStep3();
+  if (step === 4) body = renderStep4();
+
+  showContent(`
+    <div style="display:flex;gap:6px;margin-bottom:16px">${stepsHtml}</div>
+    ${body}
+  `);
+}
+
+// ── Step 1: Info Shift ──────────────────────────────────────
+function renderStep1() {
+  const d = wizardData;
+  return `
+  <div class="card">
+    <div class="card-title">Info Shift</div>
+    <div class="form-row2">
+      <div class="form-group">
+        <label class="form-label">Tanggal <span class="req">*</span></label>
+        <input type="date" class="form-input" id="tgl" value="${d.tanggal||todayStr()}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Shift <span class="req">*</span></label>
+        <select class="form-select" id="shift">
+          <option value="">Pilih...</option>
+          <option value="Shift 1" ${d.shift==='Shift 1'?'selected':''}>Shift 1 (06-14)</option>
+          <option value="Shift 2" ${d.shift==='Shift 2'?'selected':''}>Shift 2 (14-22)</option>
+          <option value="Shift 3" ${d.shift==='Shift 3'?'selected':''}>Shift 3 (22-06)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Lane <span class="req">*</span></label>
+      <select class="form-select" id="lane">
+        <option value="">Pilih...</option>
+        <option value="Lane 01" ${d.lane==='Lane 01'?'selected':''}>Lane 01</option>
+        <option value="Lane 02" ${d.lane==='Lane 02'?'selected':''}>Lane 02</option>
+        <option value="Lane 03" ${d.lane==='Lane 03'?'selected':''}>Lane 03</option>
+      </select>
+    </div>
+    <div class="form-row2">
+      <div class="form-group">
+        <label class="form-label">Jam Mulai</label>
+        <input type="time" class="form-input" id="jam_mulai" value="${d.jam_mulai||'06:00'}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Jam Selesai</label>
+        <input type="time" class="form-input" id="jam_selesai" value="${d.jam_selesai||'14:00'}">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Identitas</div>
+    <div class="form-group">
+      <label class="form-label">Nama Operator <span class="req">*</span></label>
+      <input type="text" class="form-input" id="operator" placeholder="Nama lengkap" value="${d.nama_operator||''}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Lane Leader</label>
+      <input type="text" class="form-input" id="ll" placeholder="Nama Lane Leader" value="${d.nama_lane_leader||''}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Group Leader</label>
+      <input type="text" class="form-input" id="gl" placeholder="Nama Group Leader" value="${d.nama_group_leader||''}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Foreman / FOM</label>
+      <input type="text" class="form-input" id="foreman" placeholder="Nama Foreman" value="${d.nama_foreman||''}">
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="step1Next()">Lanjut ke Check Safety →</button>
+  `;
+}
+
+function step1Next() {
+  const tgl = val('tgl'), shift = val('shift'), lane = val('lane'), op = val('operator');
+  if (!tgl || !shift || !lane || !op) { toast('Tanggal, Shift, Lane, dan Nama Operator wajib diisi', 'err'); return; }
+  Object.assign(wizardData, {
+    tanggal: tgl, shift, lane,
+    jam_mulai: val('jam_mulai'), jam_selesai: val('jam_selesai'),
+    nama_operator: op, nama_lane_leader: val('ll'),
+    nama_group_leader: val('gl'), nama_foreman: val('foreman')
+  });
+  renderInputWizard(2);
+}
+
+// ── Step 2: Check Safety ────────────────────────────────────
+function renderStep2() {
+  const safetyItems = [
+    'Emergency Stop Carton Erector','Emergency Stop Dropping Carton',
+    'Emergency Stop Input Conveyor','Emergency Stop Lifter Conveyor',
+    'Emergency Stop Carton Sealer','Safety Interlock Door Erector',
+    'Safety Interlock Door Input Conveyor','Safety Interlock Door Pusher',
+    'Safety Interlock Door Lifter Conveyor','Safety Interlock Door Carton Sealer'
+  ];
+  const fiveS = ['Mesin Erector','Mesin Cartoning','Mesin Auto Sealer','Lantai bawah mesin','Tata Letak Barang'];
+  const prev = wizardData.safetyData || {};
+
+  const renderSafetyItem = (item, i) => {
+    const pd = prev[item] || { depan:'a', belakang:'a' };
+    return `
+    <div class="check-item" id="si-wrap-${i}">
+      <div style="flex:1">
+        <div class="check-item-name">${item}</div>
+        <div style="display:flex;gap:12px;margin-top:6px">
+          <div>
+            <div style="font-size:10px;color:var(--gray4);margin-bottom:3px">Depan</div>
+            <div class="check-radios">
+              ${['a','x','-'].map(k=>`<div class="check-radio ${pd.depan===k?'sel-'+k.replace('-','dash'):''}" onclick="setSafetyKondisi('${item}','depan','${k}',${i})">${k}</div>`).join('')}
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--gray4);margin-bottom:3px">Belakang</div>
+            <div class="check-radios">
+              ${['a','x','-'].map(k=>`<div class="check-radio ${pd.belakang===k?'sel-'+k.replace('-','dash'):''}" onclick="setSafetyKondisi('${item}','belakang','${k}',${i})">${k}</div>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="keterangan-field ${(pd.depan==='x'||pd.belakang==='x')?'show':''}" id="si-ket-${i}">
+          <input type="text" class="form-input mt-2" id="si-ket-inp-${i}" placeholder="Keterangan kondisi abnormal..." value="${prev[item]?.keterangan||''}">
+        </div>
+      </div>
+    </div>`;
+  };
+
+  const d = wizardData;
+  return `
+  <div class="card">
+    <div class="card-title">Waktu Check</div>
+    <div class="form-group">
+      <label class="form-label">Waktu Pengecekan <span class="req">*</span></label>
+      <select class="form-select" id="waktu_check">
+        ${['Awal Shift 1','Setelah Istirahat Shift 1','Awal Shift 2','Setelah Istirahat Shift 2','Awal Shift 3','Setelah Istirahat Shift 3']
+          .map(w=>`<option value="${w}" ${(d.waktu_check||'Awal Shift 1')===w?'selected':''}>${w}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dicek Oleh <span class="req">*</span></label>
+      <input type="text" class="form-input" id="dicek_oleh_safety" value="${d.dicek_oleh_safety||d.nama_operator||''}" placeholder="Nama yang melakukan check">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="check-section-title">A. Emergency Stop & Safety Interlock (10 item)</div>
+    ${safetyItems.map((item,i) => renderSafetyItem(item, i)).join('')}
+  </div>
+
+  <div class="card">
+    <div class="check-section-title">B. Area 5S (5 area)</div>
+    ${fiveS.map((item,i) => renderSafetyItem(item, i+10)).join('')}
+  </div>
+
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-outline" style="width:auto;padding:13px 20px" onclick="renderInputWizard(1)">← Kembali</button>
+    <button class="btn btn-primary" onclick="step2Next()">Lanjut ke Check Visual →</button>
+  </div>`;
+}
+
+function setSafetyKondisi(item, sisi, val, idx) {
+  if (!wizardData.safetyData) wizardData.safetyData = {};
+  if (!wizardData.safetyData[item]) wizardData.safetyData[item] = {depan:'a',belakang:'a'};
+  wizardData.safetyData[item][sisi] = val;
+  const wrap = document.getElementById('si-wrap-' + idx);
+  if (!wrap) return;
+  const side = sisi === 'depan' ? 0 : 1;
+  const radios = wrap.querySelectorAll('.check-radios')[side].querySelectorAll('.check-radio');
+  radios.forEach((r,i)=>{
+    r.className = 'check-radio';
+    const v = ['a','x','-'][i];
+    if (v===val) r.classList.add('sel-' + (val==='-'?'dash':val));
+  });
+  const ketField = document.getElementById('si-ket-' + idx);
+  const d = wizardData.safetyData[item];
+  if (ketField) ketField.classList.toggle('show', d.depan==='x'||d.belakang==='x');
+}
+
+function step2Next() {
+  const waktu = val('waktu_check'), dicek = val('dicek_oleh_safety');
+  if (!dicek) { toast('Nama yang check wajib diisi','err'); return; }
+  const items = document.querySelectorAll('[id^="si-wrap-"]');
+  const safetyItems = [
+    'Emergency Stop Carton Erector','Emergency Stop Dropping Carton',
+    'Emergency Stop Input Conveyor','Emergency Stop Lifter Conveyor',
+    'Emergency Stop Carton Sealer','Safety Interlock Door Erector',
+    'Safety Interlock Door Input Conveyor','Safety Interlock Door Pusher',
+    'Safety Interlock Door Lifter Conveyor','Safety Interlock Door Carton Sealer',
+    'Mesin Erector','Mesin Cartoning','Mesin Auto Sealer','Lantai bawah mesin','Tata Letak Barang'
+  ];
+  if (!wizardData.safetyData) wizardData.safetyData = {};
+  safetyItems.forEach((item,i) => {
+    if (!wizardData.safetyData[item]) wizardData.safetyData[item] = {depan:'a',belakang:'a'};
+    const ketEl = document.getElementById('si-ket-inp-' + i);
+    if (ketEl) wizardData.safetyData[item].keterangan = ketEl.value;
+  });
+  wizardData.waktu_check = waktu;
+  wizardData.dicek_oleh_safety = dicek;
+  renderInputWizard(3);
+}
+
+// ── Step 3: Check Visual ────────────────────────────────────
+function renderStep3() {
+  const groups = {};
+  masterItems.filter(m=>m.kategori==='Visual Part').forEach(m=>{
+    if (!groups[m.bagian_mesin]) groups[m.bagian_mesin]=[];
+    groups[m.bagian_mesin].push(m);
+  });
+  const prev = wizardData.visualData || {};
+
+  let html = `
+  <div class="card">
+    <div class="form-group">
+      <label class="form-label">Dicek Oleh <span class="req">*</span></label>
+      <input type="text" class="form-input" id="dicek_oleh_visual" value="${wizardData.dicek_oleh_visual||wizardData.nama_operator||''}" placeholder="Nama operator">
+    </div>
+  </div>`;
+
+  Object.entries(groups).forEach(([bagian, items], gi)=>{
+    html += `<div class="card"><div class="check-section-title">${bagian}</div>`;
+    items.forEach((m, ii)=>{
+      const key = m.check_item_id;
+      const pd = prev[key] || { kondisi:'a' };
+      html += `
+      <div class="check-item">
+        <div style="flex:1">
+          <div class="check-item-name">${m.item_check}</div>
+          <div class="check-item-std">Standar: ${m.standart}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+            <div class="check-radios">
+              ${['a','x','-'].map(k=>`<div class="check-radio ${pd.kondisi===k?'sel-'+k.replace('-','dash'):''}" onclick="setVisualKondisi('${key}','${k}',this)">${k}</div>`).join('')}
+            </div>
+          </div>
+          <div class="keterangan-field ${pd.kondisi==='x'?'show':''}" id="cv-ket-${key}">
+            <input type="text" class="form-input mt-2" id="cv-ket-inp-${key}" placeholder="Keterangan kondisi abnormal..." value="${pd.keterangan||''}">
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  return html + `
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-outline" style="width:auto;padding:13px 20px" onclick="renderInputWizard(2)">← Kembali</button>
+    <button class="btn btn-primary" onclick="step3Next()">Lanjut ke Trouble & Rekap →</button>
+  </div>`;
+}
+
+function setVisualKondisi(key, k, el) {
+  if (!wizardData.visualData) wizardData.visualData = {};
+  if (!wizardData.visualData[key]) wizardData.visualData[key] = {};
+  wizardData.visualData[key].kondisi = k;
+  const radios = el.parentElement.querySelectorAll('.check-radio');
+  radios.forEach((r,i)=>{
+    r.className='check-radio';
+    const v=['a','x','-'][i];
+    if(v===k) r.classList.add('sel-'+(k==='-'?'dash':k));
+  });
+  const ketField = document.getElementById('cv-ket-' + key);
+  if (ketField) ketField.classList.toggle('show', k==='x');
+}
+
+function step3Next() {
+  const dicek = val('dicek_oleh_visual');
+  if (!dicek) { toast('Nama yang check wajib diisi','err'); return; }
+  if (!wizardData.visualData) wizardData.visualData = {};
+  masterItems.filter(m=>m.kategori==='Visual Part').forEach(m=>{
+    const ketEl = document.getElementById('cv-ket-inp-' + m.check_item_id);
+    if (ketEl) {
+      if (!wizardData.visualData[m.check_item_id]) wizardData.visualData[m.check_item_id]={kondisi:'a'};
+      wizardData.visualData[m.check_item_id].keterangan = ketEl.value;
+    }
+  });
+  wizardData.dicek_oleh_visual = dicek;
+  renderInputWizard(4);
+}
+
+// ── Step 4: Trouble & Rekap ─────────────────────────────────
+function renderStep4() {
+  const d = wizardData;
+  const troubles = d.troubles || [];
+
+  const troubleList = troubles.length
+    ? troubles.map((t,i)=>`
+      <div class="trouble-card">
+        <div class="trouble-header">
+          <div class="trouble-desc">${t.deskripsi}</div>
+          <div class="trouble-dur">${t.durasi} mnt</div>
+        </div>
+        <div class="trouble-meta">${t.jam_stop} → ${t.jam_start} | ${t.tindakan||'-'}</div>
+        <button class="btn btn-sm" style="margin-top:6px;color:var(--red);border-color:var(--red)" onclick="removeTrouble(${i})">Hapus</button>
+      </div>`).join('')
+    : `<div class="text-muted text-sm" style="padding:8px 0">Belum ada trouble yang ditambahkan</div>`;
+
+  return `
+  <div class="card">
+    <div class="card-title">Log Trouble Mesin</div>
+    <div id="trouble-list">${troubleList}</div>
+    <button class="btn btn-outline mt-2" onclick="showAddTrouble()">+ Tambah Trouble</button>
+  </div>
+
+  <div class="card" id="add-trouble-form" style="display:none;border:1.5px solid var(--blue)">
+    <div class="card-title" style="color:var(--blue)">Tambah Trouble</div>
+    <div class="form-group">
+      <label class="form-label">Deskripsi Trouble <span class="req">*</span></label>
+      <textarea class="form-textarea" id="t-desc" placeholder="Contoh: Karton gagal terlipat di erector, section cup sobek..."></textarea>
+    </div>
+    <div class="form-row2">
+      <div class="form-group">
+        <label class="form-label">Jam Stop</label>
+        <input type="time" class="form-input" id="t-stop" value="00:00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Jam Start</label>
+        <input type="time" class="form-input" id="t-start" value="00:00">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tindakan yang Dilakukan</label>
+      <textarea class="form-textarea" id="t-action" placeholder="Contoh: Ganti section cup rubber baru..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dilaporkan Oleh</label>
+      <input type="text" class="form-input" id="t-oleh" value="${d.nama_operator||''}" placeholder="Nama operator">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('add-trouble-form').style.display='none'">Batal</button>
+      <button class="btn btn-primary btn-sm" onclick="addTrouble()">Tambahkan</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Rekap Operasional (Jumlah per Shift)</div>
+    ${[
+      ['jml_karton_erector',  'Karton gagal terlipat (Erector)'],
+      ['jml_karton_dropping', 'Karton tersangkut (Dropping)'],
+      ['jml_karton_gravity',  'Karton tersangkut (Gravity Roller)'],
+      ['jml_produk_pusher',   'Produk tersangkut (Pusher)'],
+      ['jml_produk_filler',   'Produk tersangkut (Carton Filler)'],
+      ['jml_produk_pusher_ip','Produk tersangkut (Pusher IP)'],
+      ['jml_karton_rusak',    'Jumlah karton rusak'],
+    ].map(([id, label])=>`
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label" style="font-size:13px">${label}</label>
+        <input type="number" min="0" class="form-input" id="${id}" value="${d[id]||0}" style="max-width:120px">
+      </div>`).join('')}
+  </div>
+
+  <div class="card">
+    <div class="card-title">Catatan Shift</div>
+    <textarea class="form-textarea" id="catatan" placeholder="Catatan tambahan untuk shift berikutnya...">${d.catatan_shift||''}</textarea>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="btn btn-outline" style="width:auto;padding:13px 20px" onclick="renderInputWizard(3)">← Kembali</button>
+    <button class="btn btn-primary" id="submit-btn" onclick="submitAll()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Simpan Semua Data
+    </button>
+  </div>`;
+}
+
+function showAddTrouble() {
+  document.getElementById('add-trouble-form').style.display = 'block';
+}
+
+function addTrouble() {
+  const desc = val('t-desc');
+  if (!desc) { toast('Deskripsi trouble wajib diisi','err'); return; }
+  const stop = val('t-stop'), start = val('t-start');
+  const [sh, sm] = stop.split(':').map(Number);
+  const [eh, em] = start.split(':').map(Number);
+  let dur = (eh*60+em) - (sh*60+sm);
+  if (dur < 0) dur += 1440;
+  if (!wizardData.troubles) wizardData.troubles = [];
+  wizardData.troubles.push({
+    deskripsi: desc, jam_stop: stop, jam_start: start,
+    durasi: dur, tindakan: val('t-action'), oleh: val('t-oleh')
+  });
+  renderInputWizard(4);
+}
+
+function removeTrouble(idx) {
+  wizardData.troubles.splice(idx, 1);
+  renderInputWizard(4);
+}
+
+// ── Collect rekap from step 4 ──
+function collectRekap() {
+  ['jml_karton_erector','jml_karton_dropping','jml_karton_gravity',
+   'jml_produk_pusher','jml_produk_filler','jml_produk_pusher_ip','jml_karton_rusak'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) wizardData[id] = Number(el.value)||0;
+  });
+  const cat = document.getElementById('catatan');
+  if (cat) wizardData.catatan_shift = cat.value;
+}
+
+async function submitAll() {
+  collectRekap();
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  try {
+    // 1. Simpan laporan
+    const lapRes = await apiPost('saveLaporan', {
+      tanggal_produksi: wizardData.tanggal, shift: wizardData.shift, lane: wizardData.lane,
+      jam_mulai: wizardData.jam_mulai, jam_selesai: wizardData.jam_selesai,
+      nama_operator: wizardData.nama_operator, nama_lane_leader: wizardData.nama_lane_leader,
+      nama_group_leader: wizardData.nama_group_leader, nama_foreman: wizardData.nama_foreman,
+      jml_karton_erector: wizardData.jml_karton_erector,
+      jml_karton_dropping: wizardData.jml_karton_dropping,
+      jml_karton_gravity: wizardData.jml_karton_gravity,
+      jml_produk_pusher: wizardData.jml_produk_pusher,
+      jml_produk_filler: wizardData.jml_produk_filler,
+      jml_produk_pusher_ip: wizardData.jml_produk_pusher_ip,
+      jml_karton_rusak: wizardData.jml_karton_rusak,
+      catatan_shift: wizardData.catatan_shift
+    });
+    if (!lapRes.ok) throw new Error(lapRes.msg);
+    const lid = lapRes.laporan_id;
+
+    // 2. Simpan troubles
+    for (const t of (wizardData.troubles||[])) {
+      await apiPost('saveTrouble', {
+        laporan_id: lid, deskripsi_trouble: t.deskripsi,
+        durasi_menit: t.durasi, jam_stop: wizardData.tanggal+' '+t.jam_stop+':00',
+        jam_start: wizardData.tanggal+' '+t.jam_start+':00',
+        tanggal_produksi: wizardData.tanggal, shift: wizardData.shift,
+        keterangan_tindakan: t.tindakan, dilaporkan_oleh: t.oleh
+      });
+    }
+
+    // 3. Simpan check safety
+    const safetyItems = [
+      'Emergency Stop Carton Erector','Emergency Stop Dropping Carton',
+      'Emergency Stop Input Conveyor','Emergency Stop Lifter Conveyor',
+      'Emergency Stop Carton Sealer','Safety Interlock Door Erector',
+      'Safety Interlock Door Input Conveyor','Safety Interlock Door Pusher',
+      'Safety Interlock Door Lifter Conveyor','Safety Interlock Door Carton Sealer',
+      'Mesin Erector','Mesin Cartoning','Mesin Auto Sealer','Lantai bawah mesin','Tata Letak Barang'
+    ];
+    const safetyData = wizardData.safetyData || {};
+    const safetyRows = safetyItems.map(item => ({
+      item_safety: item,
+      kondisi_depan: (safetyData[item]||{}).depan || 'a',
+      kondisi_belakang: (safetyData[item]||{}).belakang || 'a',
+      keterangan: (safetyData[item]||{}).keterangan || ''
+    }));
+    await apiPost('saveCheckSafety', {
+      laporan_id: lid, tanggal_produksi: wizardData.tanggal,
+      shift: wizardData.shift, dicek_oleh: wizardData.dicek_oleh_safety,
+      items: safetyRows
+    });
+
+    // 4. Simpan check visual
+    const visualData = wizardData.visualData || {};
+    const visualItems = masterItems.filter(m=>m.kategori==='Visual Part').map(m=>({
+      bagian_mesin: m.bagian_mesin, item_check: m.item_check, standart: m.standart,
+      kondisi: (visualData[m.check_item_id]||{}).kondisi || 'a',
+      keterangan: (visualData[m.check_item_id]||{}).keterangan || ''
+    }));
+    await apiPost('saveCheckVisual', {
+      laporan_id: lid, tanggal_produksi: wizardData.tanggal,
+      shift: wizardData.shift, waktu_check: wizardData.waktu_check,
+      dicek_oleh: wizardData.dicek_oleh_visual, items: visualItems
+    });
+
+    toast('Semua data berhasil disimpan!', 'ok');
+    wizardData = {};
+    setTimeout(()=>nav('home'), 1500);
+
+  } catch(err) {
+    toast('Error: ' + err.message, 'err');
+    btn.disabled = false; btn.textContent = 'Simpan Semua Data';
+  }
+}
+
+// ══════════════════════════════════════════════
+// LAPORAN / SHIFT HANDOVER
+// ══════════════════════════════════════════════
+function renderReport() {
+  setTopbar('Laporan Shift', false, '');
+  const today = todayStr();
+  showContent(`
+    <div class="card">
+      <div class="card-title">Filter Laporan</div>
+      <div class="form-row2">
+        <div class="form-group">
+          <label class="form-label">Tanggal</label>
+          <input type="date" class="form-input" id="rep-tgl" value="${today}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Shift</label>
+          <select class="form-select" id="rep-shift">
+            <option value="">Semua Shift</option>
+            <option>Shift 1</option><option>Shift 2</option><option>Shift 3</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="loadReport()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Tampilkan Laporan
+      </button>
+    </div>
+    <div id="report-results"></div>
+  `);
+}
+
+async function loadReport() {
+  const tgl = val('rep-tgl'), shift = val('rep-shift');
+  document.getElementById('report-results').innerHTML = '<div class="spinner"></div>';
+  try {
+    const r = await api('getShiftReport', { tanggal: tgl, shift });
+    if (!r.ok) throw new Error(r.msg);
+    renderShiftReportCards(r.data);
+  } catch(e) {
+    document.getElementById('report-results').innerHTML =
+      `<div class="card text-red">Gagal memuat: ${e.message}</div>`;
+  }
+}
+
+function renderShiftReportCards(data) {
+  if (!data.length) {
+    document.getElementById('report-results').innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>Tidak ada laporan ditemukan</p>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  data.forEach(lap => {
+    const abnormal = lap.rekap.total > 0 || lap.total_downtime > 30;
+    const troubleHtml = lap.troubles.length
+      ? lap.troubles.map(t=>`
+        <div class="trouble-card">
+          <div class="trouble-header">
+            <div class="trouble-desc">${t.deskripsi}</div>
+            <div class="trouble-dur">${t.durasi_menit} mnt</div>
+          </div>
+          <div class="trouble-meta">${t.jam_stop} → ${t.jam_start}</div>
+          ${t.tindakan?`<div class="trouble-meta mt-2">Tindakan: ${t.tindakan}</div>`:''}
+          <div class="trouble-meta">Oleh: ${t.oleh}</div>
+        </div>`).join('')
+      : '<div class="text-muted text-sm">Tidak ada trouble</div>';
+
+    html += `
+    <div class="card" style="border-left:4px solid ${abnormal?'var(--red)':'var(--green)'}">
+      <div class="shift-header" style="margin:-14px -14px 12px;border-radius:var(--radius) var(--radius) 0 0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3>${lap.shift} — ${lap.lane}</h3>
+          <span class="badge ${abnormal?'badge-red':'badge-green'}">${abnormal?'Perlu Perhatian':'Normal'}</span>
+        </div>
+        <div class="sh-meta">📅 ${formatDateDisplay(lap.tanggal)} &nbsp;|&nbsp; 🕐 ${lap.jam_mulai} – ${lap.jam_selesai}</div>
+        <div class="sh-meta">👤 ${lap.operator} ${lap.lane_leader?'| LL: '+lap.lane_leader:''}</div>
+      </div>
+
+      <div class="section-divider">Rekap Reject & Kerusakan</div>
+      <table class="rekap-table">
+        <tr><td>Karton gagal erector</td><td>${lap.rekap.karton_erector}</td></tr>
+        <tr><td>Karton tersangkut dropping</td><td>${lap.rekap.karton_dropping}</td></tr>
+        <tr><td>Karton tersangkut gravity</td><td>${lap.rekap.karton_gravity}</td></tr>
+        <tr><td>Produk tersangkut pusher</td><td>${lap.rekap.produk_pusher}</td></tr>
+        <tr><td>Produk tersangkut filler</td><td>${lap.rekap.produk_filler}</td></tr>
+        <tr><td>Produk tersangkut pusher IP</td><td>${lap.rekap.produk_pusher_ip}</td></tr>
+        <tr><td>Karton rusak</td><td>${lap.rekap.karton_rusak}</td></tr>
+        <tr><td><strong>Total</strong></td><td><strong class="${lap.rekap.total>0?'text-red':''}">${lap.rekap.total}</strong></td></tr>
+      </table>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-label">Total Downtime</div>
+          <div class="kpi-val ${lap.total_downtime>30?'danger':''}">${lap.total_downtime} <span style="font-size:13px;font-weight:400">mnt</span></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Jumlah Trouble</div>
+          <div class="kpi-val ${lap.troubles.length>0?'warn':''}">${lap.troubles.length} <span style="font-size:13px;font-weight:400">kejadian</span></div>
+        </div>
+      </div>
+
+      <div class="section-divider">Log Trouble</div>
+      ${troubleHtml}
+
+      ${lap.catatan ? `<div class="section-divider">Catatan</div><div style="font-size:13px;color:var(--gray7);background:var(--gray0);padding:10px;border-radius:8px;border-left:3px solid var(--amber)">${lap.catatan}</div>` : ''}
+    </div>`;
+  });
+
+  document.getElementById('report-results').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════════
+function renderHistory() {
+  setTopbar('Riwayat Laporan', false, '');
+  showContent(`
+    <div class="card">
+      <div class="card-title">Cari Riwayat</div>
+      <div class="form-row2">
+        <div class="form-group">
+          <label class="form-label">Tanggal</label>
+          <input type="date" class="form-input" id="hist-tgl" value="${todayStr()}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Shift</label>
+          <select class="form-select" id="hist-shift">
+            <option value="">Semua</option>
+            <option>Shift 1</option><option>Shift 2</option><option>Shift 3</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="loadHistory()">Cari</button>
+    </div>
+    <div id="hist-results"></div>
+  `);
+}
+
+async function loadHistory() {
+  const tgl = val('hist-tgl'), shift = val('hist-shift');
+  document.getElementById('hist-results').innerHTML = '<div class="spinner"></div>';
+  try {
+    const r = await api('getLaporanList', { tanggal: tgl, shift });
+    if (!r.ok) throw new Error(r.msg);
+    if (!r.data.length) {
+      document.getElementById('hist-results').innerHTML = '<div class="empty-state"><p>Tidak ada data ditemukan</p></div>';
+      return;
+    }
+    let html = r.data.map(lap=>`
+      <div class="lap-item" onclick="showLaporanDetail('${lap.laporan_id}')">
+        <div class="lap-item-top">
+          <div class="lap-item-shift">${lap.shift} — ${lap.lane}</div>
+          <div class="text-xs text-muted">${formatDateDisplay(lap.tanggal_produksi)}</div>
+        </div>
+        <div class="lap-item-meta">👤 ${lap.nama_operator} &nbsp;|&nbsp; ${lap.jam_mulai}–${lap.jam_selesai}</div>
+        <div class="lap-item-bottom">
+          <span class="badge badge-gray">${lap.nama_mesin}</span>
+        </div>
+      </div>`).join('');
+    document.getElementById('hist-results').innerHTML = html;
+  } catch(e) {
+    document.getElementById('hist-results').innerHTML = `<div class="card text-red">Error: ${e.message}</div>`;
+  }
+}
+
+async function showLaporanDetail(lid) {
+  setTopbar('Detail Laporan', true, 'renderHistory()');
+  showContent('<div class="spinner"></div>');
+  try {
+    const r = await api('getLaporanDetail', { laporan_id: lid });
+    if (!r.ok) throw new Error(r.msg);
+    const lap = r.laporan;
+    const troubles = r.troubles || [];
+    const safety = r.checkSafety || [];
+    const visual = r.checkVisual || [];
+    const abnSafety = safety.filter(s=>s.kondisi_depan==='x'||s.kondisi_belakang==='x');
+    const abnVisual = visual.filter(v=>v.kondisi==='x');
+
+    let html = `
+    <div class="card" style="background:var(--navy);border:none;color:#fff">
+      <div style="font-size:18px;font-weight:700">${lap.shift} — ${lap.lane}</div>
+      <div style="font-size:13px;opacity:.75;margin-top:3px">📅 ${formatDateDisplay(lap.tanggal_produksi)} &nbsp;|&nbsp; 🕐 ${lap.jam_mulai}–${lap.jam_selesai}</div>
+      <div style="font-size:13px;opacity:.75;margin-top:2px">👤 Operator: ${lap.nama_operator}</div>
+      ${lap.nama_lane_leader?`<div style="font-size:13px;opacity:.75">Lane Leader: ${lap.nama_lane_leader}</div>`:''}
+      ${lap.nama_foreman?`<div style="font-size:13px;opacity:.75">Foreman: ${lap.nama_foreman}</div>`:''}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Rekap Operasional</div>
+      <table class="rekap-table">
+        <tr><td>Karton gagal erector</td><td>${lap.jml_karton_erector||0}</td></tr>
+        <tr><td>Karton tersangkut dropping</td><td>${lap.jml_karton_dropping||0}</td></tr>
+        <tr><td>Karton tersangkut gravity</td><td>${lap.jml_karton_gravity||0}</td></tr>
+        <tr><td>Produk tersangkut pusher</td><td>${lap.jml_produk_pusher||0}</td></tr>
+        <tr><td>Produk tersangkut filler</td><td>${lap.jml_produk_filler||0}</td></tr>
+        <tr><td>Produk tersangkut pusher IP</td><td>${lap.jml_produk_pusher_ip||0}</td></tr>
+        <tr><td>Karton rusak</td><td>${lap.jml_karton_rusak||0}</td></tr>
+      </table>
+      ${lap.catatan_shift?`<div style="margin-top:10px;font-size:13px;background:var(--amber-light);padding:9px;border-radius:8px;color:var(--amber)">📝 ${lap.catatan_shift}</div>`:''}
+    </div>`;
+
+    if (troubles.length) {
+      html += `<div class="card">
+        <div class="card-title">Log Trouble (${troubles.length})</div>
+        ${troubles.map(t=>`
+          <div class="trouble-card">
+            <div class="trouble-header"><div class="trouble-desc">${t.deskripsi_trouble}</div><div class="trouble-dur">${t.durasi_menit} mnt</div></div>
+            <div class="trouble-meta">${t.jam_stop} → ${t.jam_start}</div>
+            ${t.keterangan_tindakan?`<div class="trouble-meta mt-2">Tindakan: ${t.keterangan_tindakan}</div>`:''}
+          </div>`).join('')}
+      </div>`;
+    }
+
+    if (abnSafety.length) {
+      html += `<div class="card" style="border-color:var(--red)">
+        <div class="card-title text-red">⚠️ Safety Abnormal (${abnSafety.length})</div>
+        ${abnSafety.map(s=>`
+          <div class="check-item">
+            <div style="flex:1">
+              <div class="check-item-name">${s.item_safety}</div>
+              <div class="trouble-meta">Depan: <span class="${s.kondisi_depan==='x'?'text-red':''}">${s.kondisi_depan}</span> | Belakang: <span class="${s.kondisi_belakang==='x'?'text-red':''}">${s.kondisi_belakang}</span></div>
+              ${s.keterangan?`<div class="trouble-meta">${s.keterangan}</div>`:''}
+            </div>
+          </div>`).join('')}
+      </div>`;
+    }
+
+    if (abnVisual.length) {
+      html += `<div class="card" style="border-color:var(--amber)">
+        <div class="card-title" style="color:var(--amber)">⚠️ Check Visual Abnormal (${abnVisual.length})</div>
+        ${abnVisual.map(v=>`
+          <div class="check-item">
+            <div style="flex:1">
+              <div class="check-item-name">${v.item_check}</div>
+              <div class="check-item-std">${v.bagian_mesin} | ${v.waktu_check}</div>
+              ${v.keterangan?`<div class="trouble-meta" style="color:var(--amber)">${v.keterangan}</div>`:''}
+            </div>
+          </div>`).join('')}
+      </div>`;
+    }
+
+    showContent(html);
+  } catch(e) {
+    showContent(`<div class="card text-red">Gagal memuat detail: ${e.message}</div>`);
+  }
+}
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function val(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatDateDisplay(s) {
+  if (!s) return '';
+  const [y,m,d] = s.substring(0,10).split('-');
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  return `${d} ${months[parseInt(m)-1]} ${y}`;
+}
+
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (type?' '+type:'');
+  setTimeout(()=>el.className='toast', 3000);
+}
+</script>
+</body>
+</html>
